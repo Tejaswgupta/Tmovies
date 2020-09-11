@@ -8,6 +8,7 @@ import 'package:movie/generated/i18n.dart';
 import 'package:movie/style/themestyle.dart';
 import 'package:movie/views/account_page/components/user_info_component/component/user_menu.dart';
 import 'package:movie/widgets/overlay_entry_manage.dart';
+import 'package:movie/views/account_page/components/user_info_component/component/about_page.dart';
 
 import 'action.dart';
 import 'state.dart';
@@ -45,6 +46,11 @@ Widget buildView(
               onSignOut: () {
                 _closeMenu(menuOverlayEntry);
                 dispatch(UserInfoActionCreator.signOut());
+              },
+              onAboutPageTap: () {
+                _closeMenu(menuOverlayEntry);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AboutPage()));
               },
             )
           ],
