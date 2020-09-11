@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:movie/actions/adapt.dart';
 import 'package:movie/style/themestyle.dart';
+import 'package:movie/views/account_page/components/user_info_component/component/about_page.dart';
 
 import 'arrow_clipper.dart';
 
@@ -9,7 +10,13 @@ class UserMenu extends StatelessWidget {
   final Function onSignOut;
   final Function onNotificationTap;
   final Function onPaymentTap;
-  const UserMenu({this.onSignOut, this.onNotificationTap, this.onPaymentTap});
+  final Function onAboutPageTap;
+  // final Function onAboutTap;
+  const UserMenu(
+      {this.onSignOut,
+      this.onNotificationTap,
+      this.onPaymentTap,
+      this.onAboutPageTap});
   @override
   Widget build(BuildContext context) {
     final _theme = ThemeStyle.getTheme(context);
@@ -65,6 +72,11 @@ class UserMenu extends StatelessWidget {
                   title: 'Sign out',
                   onTap: onSignOut,
                 ),
+                _OptionItem(
+                  title: "About",
+                  icon: FontAwesomeIcons.userCircle,
+                  onTap: onAboutPageTap,
+                )
               ]),
             ),
           ],
