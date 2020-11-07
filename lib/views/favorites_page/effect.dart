@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fish_redux/fish_redux.dart';
 import 'package:flutter/material.dart' hide Action;
-import 'package:movie/actions/http/base_api.dart';
+import 'package:movie/actions/api/base_api.dart';
 import 'package:movie/actions/imageurl.dart';
 import 'package:movie/models/enums/imagesize.dart';
 import 'package:palette_generator/palette_generator.dart';
@@ -29,8 +29,9 @@ Future _onInit(Action action, Context<FavoritesPageState> ctx) async {
     final movie =
         await _baseApi.getFavorite(ctx.state.user.firebaseUser.uid, 'movie');
     if (movie.success) ctx.state.animationController.forward(from: 0.0);
-    ctx.dispatch(
-        FavoritesPageActionCreator.setBackground(movie.result.data[0]));
+    if ((movie?.result?.data?.length ?? 0) > 0)
+      ctx.dispatch(
+          FavoritesPageActionCreator.setBackground(movie.result.data[0]));
     ctx.dispatch(FavoritesPageActionCreator.setMovie(movie.result));
     final tv =
         await _baseApi.getFavorite(ctx.state.user.firebaseUser.uid, 'tv');

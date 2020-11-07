@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:movie/actions/adapt.dart';
 import 'package:movie/actions/imageurl.dart';
 import 'package:movie/actions/stream_link_convert/stream_link_convert_factory.dart';
-import 'package:movie/models/ad_target_info.dart';
+import 'package:movie/actions/ads_config.dart';
 import 'package:movie/models/enums/imagesize.dart';
 import 'package:movie/widgets/web_torrent_player.dart';
 import 'package:movie/widgets/webview_player.dart';
@@ -26,7 +27,9 @@ class PlayerPanel extends StatefulWidget {
   final bool useVideoSourceApi;
   final bool needAd;
   final bool loading;
+  final bool autoPlay;
   final int linkId;
+  final Function onPlay;
   const PlayerPanel({
     Key key,
     this.streamLink,
@@ -37,6 +40,8 @@ class PlayerPanel extends StatefulWidget {
     this.useVideoSourceApi = true,
     this.streamInBrowser = false,
     this.needAd = false,
+    this.autoPlay = false,
+    this.onPlay,
   })  : assert(streamLink != null),
         super(key: key);
   @override
@@ -84,6 +89,7 @@ class _PlayerPanelState extends State<PlayerPanel>
     if (_needAd != widget.needAd && !_haveOpenAds) _setNeedAd(widget.needAd);
     if (_loading != widget.loading) _setLoading(widget.loading);
     if (_playerType != widget.playerType) _setPlayerType(widget.playerType);
+    //if (widget.autoPlay) _playTapped(context);
     super.didUpdateWidget(oldWidget);
   }
 
@@ -103,14 +109,14 @@ class _PlayerPanelState extends State<PlayerPanel>
           break;
         case RewardedVideoAdEvent.closed:
           if (_isRewarded) {
-            _haveOpenAds = true;
-            _setNeedAd(false);
             _startPlayer();
-          } else
-            print('closed');
+          }
+          print('closed');
           break;
         case RewardedVideoAdEvent.rewarded:
           _isRewarded = true;
+          _haveOpenAds = true;
+          _setNeedAd(false);
           print('rewarded');
           break;
         default:
@@ -127,7 +133,7 @@ class _PlayerPanelState extends State<PlayerPanel>
       _setLoading(true);
       _rewardedVideoAd.load(
           adUnitId: RewardedVideoAd.testAdUnitId,
-          targetingInfo: AdTargetInfo.targetingInfo);
+          targetingInfo: AdsConfig.instance.targetingInfo);
       return;
     }
     await _startPlayer();
@@ -145,6 +151,7 @@ class _PlayerPanelState extends State<PlayerPanel>
     setState(() {
       _play = true;
     });
+    if (widget.onPlay != null) widget.onPlay();
   }
 
   _getDirectUrl() async {
@@ -171,9 +178,7 @@ class _PlayerPanelState extends State<PlayerPanel>
   }
 
   _setNeedAd(bool needAd) {
-    setState(() {
-      _needAd = needAd;
-    });
+    _needAd = needAd;
   }
 
   @override
@@ -208,7 +213,12 @@ class _Player extends StatelessWidget {
         return WebViewPlayer(streamLink: streamLink, filterUrl: streamLink);
       case 'urlresolver':
       case 'other':
-        return VideoPlayer(videoUrl: streamLink);
+        return VideoPlayer(
+            controller: VideoPlayerController.network(streamLink));
+      case 'localFile':
+        return VideoPlayer(
+          controller: VideoPlayerController.file(File(streamLink)),
+        );
       case 'Torrent':
         return WebTorrentPlayer(
           key: ValueKey(streamLink),
@@ -224,15 +234,14 @@ class _Player extends StatelessWidget {
 }
 
 class VideoPlayer extends StatefulWidget {
-  final String videoUrl;
-  const VideoPlayer({@required this.videoUrl});
+  final VideoPlayerController controller;
+  const VideoPlayer({this.controller});
   @override
   _VideoPlayerState createState() => _VideoPlayerState();
 }
 
 class _VideoPlayerState extends State<VideoPlayer> {
   ChewieController _chewieController;
-  VideoPlayerController _videoPlayerController;
 
   @override
   void initState() {
@@ -241,17 +250,16 @@ class _VideoPlayerState extends State<VideoPlayer> {
   }
 
   _init() {
-    _videoPlayerController = VideoPlayerController.network(widget.videoUrl);
-    _videoPlayerController.initialize().then((value) {
+    widget.controller.initialize().then((value) {
       _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController,
+        videoPlayerController: widget.controller,
         customControls: CustomCupertinoControls(
           backgroundColor: Colors.black,
           iconColor: Colors.white,
         ),
         allowedScreenSleep: false,
         autoPlay: true,
-        aspectRatio: _videoPlayerController.value.aspectRatio,
+        aspectRatio: widget.controller.value.aspectRatio,
       );
       setState(() {});
     });
@@ -259,7 +267,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
 
   @override
   void dispose() {
-    _videoPlayerController?.dispose();
+    widget.controller?.dispose();
     _chewieController?.dispose();
     super.dispose();
   }
@@ -272,7 +280,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
           ? Center(
               child: Container(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(const Color(0xFFFFFFFF)),
+                  valueColor: AlwaysStoppedAnimation(
+                    const Color(0xFFFFFFFF),
+                  ),
                 ),
               ),
             )
@@ -316,13 +326,16 @@ class _PlayArrow extends StatelessWidget {
   const _PlayArrow();
   @override
   Widget build(BuildContext context) {
+    final _brightness = MediaQuery.of(context).platformBrightness;
     return Center(
         child: ClipRRect(
       borderRadius: BorderRadius.circular(Adapt.px(50)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
-          color: const Color(0x40FFFFFF),
+          color: _brightness == Brightness.light
+              ? const Color(0x40FFFFFF)
+              : const Color(0x40000000),
           width: Adapt.px(100),
           height: Adapt.px(100),
           child: Icon(

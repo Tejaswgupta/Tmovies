@@ -3,6 +3,7 @@ import 'package:movie/actions/stream_link_convert/bitporno.dart';
 import 'package:movie/actions/stream_link_convert/clipwatching.dart';
 import 'package:movie/actions/stream_link_convert/gamovideo.dart';
 import 'package:movie/actions/stream_link_convert/gounlimited.dart';
+import 'package:movie/actions/stream_link_convert/ninjastream.dart';
 import 'package:movie/actions/stream_link_convert/powvideo.dart';
 import 'package:movie/actions/stream_link_convert/prostream.dart';
 import 'package:movie/actions/stream_link_convert/streamplay.dart';
@@ -35,12 +36,13 @@ import 'vup.dart';
 class StreamLinkConvertFactory {
   StreamLinkConvertFactory._();
   static final StreamLinkConvertFactory instance = StreamLinkConvertFactory._();
-  List<String> _hosts = [
+  List<String> hosts = [
     'archive',
     'bitporno',
     'clipwatching',
     'cloudvideo',
     'dood',
+    'feurl',
     'fembed',
     'gamovideo',
     'gounlimited',
@@ -49,6 +51,7 @@ class StreamLinkConvertFactory {
     'mediafire',
     'mixdrop',
     'mp4upload',
+    "ninjastream",
     'openlay',
     'powvideo',
     'prostream',
@@ -89,6 +92,7 @@ class StreamLinkConvertFactory {
       case 'dood':
         _link = await Dood.getUrl(link);
         break;
+      case 'feurl':
       case 'fembed':
         _link = await Fembed.getUrl(link);
         break;
@@ -109,6 +113,9 @@ class StreamLinkConvertFactory {
         break;
       case 'mp4upload':
         _link = await Mp4upload.getUrl(link);
+        break;
+      case 'ninjastream':
+        _link = await NinjaStream.getUrl(link);
         break;
       case 'openlay':
         _link = await Openlay.getUrl(link);
@@ -175,7 +182,7 @@ class StreamLinkConvertFactory {
   }
 
   String _getDomain(String link) {
-    for (var e in _hosts) if (link.contains(e)) return e;
+    for (var e in hosts) if (link.contains(e)) return e;
     return '';
   }
 }

@@ -34,6 +34,9 @@ Widget buildView(
             OptionMenu(
               useVideoSourceApi: state.useVideoSourceApi,
               streamInBrowser: state.streamInBrowser,
+              host: state.preferHost,
+              languageCode: state.defaultVideoLanguage,
+              closeMenu: () => _closeMenu(menuOverlayEntry),
               reportTap: () {
                 dispatch(BottomPanelActionCreator.reportStreamLink());
                 _closeMenu(menuOverlayEntry);
@@ -46,6 +49,10 @@ Widget buildView(
                   dispatch(BottomPanelActionCreator.useVideoSource(b)),
               onStreamInBrowserTap: (b) =>
                   dispatch(BottomPanelActionCreator.streamInBrowser(b)),
+              onHostSelected: (s) =>
+                  dispatch(BottomPanelActionCreator.preferHostTap(s)),
+              onLanguageSelected: (code) =>
+                  dispatch(BottomPanelActionCreator.defaultLanguageTap(code)),
             ),
           ],
         );
@@ -109,8 +116,8 @@ Widget buildView(
               links: state.streamLinks?.list ?? [],
               movieName: state.movieName,
               playVideo: (d) {
+                dispatch(BottomPanelActionCreator.seletedLink(d));
                 _closeMenu(menuOverlayEntry);
-                BottomPanelActionCreator.seletedLink(d);
               },
             ),
           ],
